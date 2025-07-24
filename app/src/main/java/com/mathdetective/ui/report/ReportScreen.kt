@@ -16,7 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
     val progress by viewModel.userProgress.collectAsState()
-    val allOperators = listOf('+', '-', '*', '÷')
+    val allOperators = listOf('+', '-', '*', '/')
 
     Scaffold(
         topBar = {
