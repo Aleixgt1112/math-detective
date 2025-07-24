@@ -9,10 +9,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    onPlayClick: () -> Unit,
+    onProgressClick: () -> Unit,
+    onRewardsClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -27,21 +30,21 @@ fun HomeScreen(navController: NavController) {
         )
         Spacer(modifier = Modifier.height(64.dp))
         Button(
-            onClick = { navController.navigate("practice") },
+            onClick = onPlayClick,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Jugar", style = MaterialTheme.typography.titleLarge)
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navController.navigate("report") },
+            onClick = onProgressClick,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Mi Progreso", style = MaterialTheme.typography.titleLarge)
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navController.navigate("rewards") },
+            onClick = onRewardsClick,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Mis Recompensas", style = MaterialTheme.typography.titleLarge)
