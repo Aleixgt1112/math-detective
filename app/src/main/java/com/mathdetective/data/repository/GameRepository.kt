@@ -24,7 +24,7 @@ object GameRepository {
     val avatars = _avatars.asStateFlow()
 
     fun generateNewOperation(): Operation {
-        val operator = listOf('+', '-', '*', '÷').random()
+        val operator = listOf('+', '-', '*', '/').random()
         var operand1 = Random.nextInt(1, 11)
         var operand2 = Random.nextInt(1, 11)
         var result: Int = 0
@@ -46,10 +46,10 @@ object GameRepository {
                 result = operand1 * operand2
             }
             '/' -> {
-                // Asegurar que la división sea exacta
-                operand2 = Random.nextInt(1, 6)
-                result = Random.nextInt(1, 6)
-                operand1 = operand2 * result
+                val maxResult = 13  // para que resultado sea < 12
+                operand2 = Random.nextInt(2, 13)       // divisor entre 2 y 12
+                result = Random.nextInt(1, maxResult)  // resultado entre 1 y 12
+                operand1 = operand2 * result           // asegura división exacta
             }
         }
         return Operation(operand1, operand2, result, operator)
