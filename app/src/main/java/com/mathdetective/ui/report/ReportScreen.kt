@@ -21,6 +21,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Size
@@ -29,6 +31,8 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.math.cos
@@ -40,8 +44,9 @@ import kotlin.math.min
 fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
     val progress by viewModel.userProgress.collectAsState()
     val allOperators = listOf('+', '-', '*', '/')
+    var showHelpDialog by remember { mutableStateOf(false) }
 
-// Calcular la mejor precisión
+    // Calcular la mejor precisión
     val bestAccuracy = allOperators.maxOfOrNull { op ->
         val correct = progress.correctAnswers[op] ?: 0
         val incorrect = progress.incorrectAnswers[op] ?: 0
@@ -51,9 +56,45 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Mi Progreso") })
+            TopAppBar(
+                title = { Text("Mi Progreso",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+                actions = {
+                    IconButton(onClick = { showHelpDialog = true }) {
+                        Icon(Icons.Default.Info, contentDescription = "Ayuda")
+                    }
+                }
+            )
         }
     ) { paddingValues ->
+        val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+        if (showHelpDialog) {
+            AlertDialog(
+                onDismissRequest = { showHelpDialog = false },
+                confirmButton = {
+                    TextButton(onClick = { showHelpDialog = false }) {
+                        Text("Entendido")
+                    }
+                },
+                title = {
+                    Text("¿Cómo interpretar este informe?")
+                },
+                text = {
+                    Column {
+                        Text("• El gráfico de habilidad muestra tu precisión en cada tipo de operación (+, −, ×, ÷).")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("• Cada línea en el gráfico representa una operación.")
+                        Text("• El área verde indica tu habilidad general.")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("• En las barras de rendimiento:")
+                        Text("   🟢 Verde: mejor operación")
+                        Text("   🔵 Azul: rendimiento medio")
+                        Text("   🔴 Rojo: necesitas mejorar (menos del 50%)")
+                    }
+                }
+            )
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -63,13 +104,22 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
         ) {
             //Total de Estrellitas
             item {
-                Text("Puntos Totales: ${progress.points} ⭐", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    "Puntos Totales:   ${progress.points} ⭐",
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.headlineSmall
+                )
                 Spacer(modifier = Modifier.height(10.dp))
             }
+
             // Gráfico de Habilidad
             item {
                 Spacer(modifier = Modifier.height(32.dp))
-                Text("Gráfico de Habilidad", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    "🧠 Tu Habilidad Matemática",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 val operatorAccuracies = allOperators.map { op ->
@@ -90,14 +140,7 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
                     val angles = listOf(0f, 90f, 180f, 270f)
                     val operatorLabels = listOf("+", "-", "*", "/")
 
-                    val operatorAccuracies = allOperators.map { op ->
-                        val correct = progress.correctAnswers[op] ?: 0
-                        val incorrect = progress.incorrectAnswers[op] ?: 0
-                        val total = correct + incorrect
-                        if (total > 0) correct.toFloat() / total else 0f
-                    }
-
-                    // 🕸️ Dibujar círculos concéntricos (niveles)
+                    //  Dibujar círculos concéntricos (niveles)
                     repeat(4) { i ->
                         drawCircle(
                             color = Color.LightGray.copy(alpha = 0.3f),
@@ -107,7 +150,7 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
                         )
                     }
 
-                    // 🕸️ Líneas radiales
+                    //  Líneas radiales
                     angles.forEach { angleDeg ->
                         val angleRad = Math.toRadians(angleDeg.toDouble()).toFloat()
                         val endX = center.x + radius * cos(angleRad)
@@ -120,7 +163,7 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
                         )
                     }
 
-                    // 🕷️ Dibujar área del radar (polígono)
+                    // Dibujar área del radar (polígono)
                     val points = operatorAccuracies.mapIndexed { index, accuracy ->
                         val angleRad = Math.toRadians(angles[index].toDouble()).toFloat()
                         val valueRadius = radius * accuracy
@@ -141,7 +184,7 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
 
                         drawPath(
                             path = path,
-                            color = Color(0xFF4CAF50).copy(alpha = 0.4f), // verde con transparencia
+                            color = Color(0xFF4CAF50).copy(alpha = 0.4f),
                             style = Fill
                         )
 
@@ -152,10 +195,10 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
                         )
                     }
 
-                    // 🏷️ Etiquetas de operadores
+                    // Etiquetas de operadores
                     operatorLabels.forEachIndexed { index, label ->
                         val angleRad = Math.toRadians(angles[index].toDouble()).toFloat()
-                        val labelOffset =  radius + 24.dp.toPx()
+                        val labelOffset = radius + 24.dp.toPx()
                         val labelX = center.x + labelOffset * cos(angleRad)
                         val labelY = center.y + labelOffset * sin(angleRad)
 
@@ -165,22 +208,25 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
                             labelY,
                             android.graphics.Paint().apply {
                                 textSize = 42f
-                                color = android.graphics.Color.BLACK
+                                color = primaryColor
                                 textAlign = android.graphics.Paint.Align.CENTER
                             }
                         )
                     }
                 }
-
             }
 
+            // Título de rendimiento
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Rendimiento por Operación", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    "📊  Detalle por Operación",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            //Operadores y sus estadísticas
+            // Estadísticas por operación
             items(allOperators.size) { index ->
                 val operator = allOperators[index]
                 val correct = progress.correctAnswers[operator] ?: 0
@@ -202,7 +248,7 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Operación: $operator", style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Aciertos: $correct | Fallos: $incorrect")
+                        Text("Aciertos: $correct   Fallos: $incorrect")
                         Spacer(modifier = Modifier.height(4.dp))
                         LinearProgressIndicator(
                             progress = accuracy,
@@ -214,8 +260,6 @@ fun ReportScreen(viewModel: ReportViewModel = viewModel()) {
                     }
                 }
             }
-
-
         }
     }
 }
