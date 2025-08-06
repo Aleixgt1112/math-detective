@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -11,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -35,18 +37,54 @@ val bottomNavItems = listOf(
     Screen.Rewards
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    // Determinar si mostrar la bottom navigation (no mostrar en home)
-    val showBottomNav = currentDestination?.route != "home"
+    // Determinar si mostrar la navegación (no mostrar en home)
+    val showTopAndBottomNav = currentDestination?.route != "home"
 
     Scaffold(
+        topBar = {
+            if (showTopAndBottomNav) {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = "Math Detective 🕵️",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                navController.navigate("home") {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Home,
+                                contentDescription = "Ir al inicio",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color(0xFF5E72E4),
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    )
+                )
+            }
+        },
         bottomBar = {
-            if (showBottomNav) {
+            if (showTopAndBottomNav) {
                 NavigationBar(
                     containerColor = Color(0xFF5E72E4), // Color azul del tema de tu app
                     contentColor = Color.White
