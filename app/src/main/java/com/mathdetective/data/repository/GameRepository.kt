@@ -3,9 +3,7 @@ package com.mathdetective.data.repository
 import com.mathdetective.data.model.Avatar
 import com.mathdetective.data.model.Operation
 import com.mathdetective.data.model.UserProgress
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlin.random.Random
 
 object GameRepository {
@@ -18,10 +16,23 @@ object GameRepository {
             Avatar(id = 1, name = "Detective Clásico", icon = "🕵️", cost = 0, isUnlocked = true),
             Avatar(id = 2, name = "Robot Matemático", icon = "🤖", cost = 50, isUnlocked = false),
             Avatar(id = 3, name = "Mago de Números", icon = "🧙", cost = 100, isUnlocked = false),
-            Avatar(id = 4, name = "Explorador Veloz", icon = "🏃", cost = 150, isUnlocked = false)
+            Avatar(id = 4, name = "Explorador Veloz", icon = "🏃", cost = 150, isUnlocked = false),
+            Avatar(id = 5, name = "Científico Genial", icon = "👨‍🔬", cost = 200, isUnlocked = false),
+            Avatar(id = 6, name = "Ninja Matemático", icon = "🥷", cost = 300, isUnlocked = false),
+            Avatar(id = 7, name = "Superhéroe Numérico", icon = "🦸", cost = 500, isUnlocked = false),
+            Avatar(id = 8, name = "Maestro Dragón", icon = "🐉", cost = 1000, isUnlocked = false)
         )
     )
     val avatars = _avatars.asStateFlow()
+
+    // StateFlow para el avatar seleccionado
+    val selectedAvatar = combine(userProgress, avatars) { progress, avatarList ->
+        avatarList.find { it.id == progress.selectedAvatarId }
+    }.stateIn(
+        scope = kotlinx.coroutines.GlobalScope,
+        started = kotlinx.coroutines.flow.SharingStarted.Eagerly,
+        initialValue = null
+    )
 
     fun generateNewOperation(): Operation {
         val operator = listOf('+', '-', '*', '/').random()
@@ -52,7 +63,10 @@ object GameRepository {
                 operand1 = operand2 * result           // asegura división exacta
             }
         }
-        return Operation(operand1, operand2, result, operator)
+
+        // Generar opciones mezcladas para el usuario
+        val options = listOf('+', '-', '*', '/').shuffled()
+        return Operation(operand1, operand2, result, operator, options)
     }
 
     // Procesa la respuesta del usuario y actualiza el progreso.
@@ -84,6 +98,22 @@ object GameRepository {
                     if (it.id == avatarId) it.copy(isUnlocked = true) else it
                 }
             }
+
+            // Si es el primer avatar desbloqueado (después del default), seleccionarlo automáticamente
+            if (_userProgress.value.selectedAvatarId == 1 && avatarId != 1) {
+                selectAvatar(avatarId)
+            }
         }
+    }
+
+    fun selectAvatar(avatarId: Int) {
+        val avatar = _avatars.value.find { it.id == avatarId }
+        if (avatar?.isUnlocked == true) {
+            _userProgress.update { it.copy(selectedAvatarId = avatarId) }
+        }
+    }
+
+    fun getSelectedAvatar(): Avatar? {
+        return _avatars.value.find { it.id == _userProgress.value.selectedAvatarId }
     }
 }
