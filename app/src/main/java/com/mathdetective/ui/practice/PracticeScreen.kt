@@ -8,11 +8,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+
+fun colorForOperator(op: String): Color = when (op) {
+    "+" -> Color(0xFF2ECC40) // verde
+    "-" -> Color(0xFFFF4136) // rojo
+    "×", "*" -> Color(0xFFFF851B) // naranja
+    "÷", "/" -> Color(0xFF0074D9) // azul
+    else -> Color.Gray
+}
 
 @Composable
 fun PracticeScreen(viewModel: PracticeViewModel = viewModel()) {
@@ -60,27 +71,29 @@ fun PracticeScreen(viewModel: PracticeViewModel = viewModel()) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 operation!!.options.forEach { operator ->
-                    Button(
-                        modifier = Modifier.size(72.dp),
+                    val color = colorForOperator(operator.toString())
+                    ArcadeButton(
+                        text = operator.toString(),
+                        color = color,
                         onClick = {
                             val isCorrect = viewModel.checkAnswer(operator)
                             if (isCorrect) {
                                 feedbackMessage = "¡Bien hecho!"
-                                feedbackColor = Color(0xFF4CAF50) // Verde más bonito
+                                feedbackColor = Color(0xFF4CAF50)
                                 showFeedback = true
-                                // Cargar nueva operación después de un acierto
                                 viewModel.loadNewOperation()
                             } else {
                                 feedbackMessage = "¡Inténtalo de nuevo!"
-                                feedbackColor = Color(0xFFF44336) // Rojo más bonito
+                                feedbackColor = Color(0xFFF44336)
                                 showFeedback = true
                             }
-                        }
-                    ) {
-                        Text(text = operator.toString(), style = MaterialTheme.typography.headlineMedium)
-                    }
+                        },
+                        modifier = Modifier.size(width = 72.dp, height = 60.dp)
+                    )
                 }
             }
+
+
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -142,3 +155,29 @@ fun PracticeScreen(viewModel: PracticeViewModel = viewModel()) {
         }
     }
 }
+
+
+@Composable
+fun ArcadeButton(
+    text: String,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(60.dp),
+        shape = RoundedCornerShape(50.dp), // Esquinas más redondeadas
+        colors = ButtonDefaults.buttonColors(containerColor = color),
+        elevation = ButtonDefaults.buttonElevation(10.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Monospace,
+            color = Color.White
+        )
+    }
+}
+
