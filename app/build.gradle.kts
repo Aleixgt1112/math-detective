@@ -63,4 +63,6 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.androidx.activity.compose.v180)
 
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+
 }
