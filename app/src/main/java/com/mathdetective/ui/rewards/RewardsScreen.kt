@@ -1,5 +1,6 @@
 package com.mathdetective.ui.rewards
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -18,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun RewardsScreen(viewModel: RewardsViewModel = viewModel()) {
     val avatars by viewModel.avatars.collectAsState()
     val progress by viewModel.userProgress.collectAsState()
+    val selectedAvatarId by viewModel.selectedAvatarId.collectAsState()
 
     Scaffold(
         topBar = {
@@ -45,12 +47,28 @@ fun RewardsScreen(viewModel: RewardsViewModel = viewModel()) {
             ) {
                 items(avatars.size) { index ->
                     val avatar = avatars[index]
+                    val isSelected = selectedAvatarId == avatar.id
+
                     Card(
-                        modifier = Modifier.aspectRatio(1f),
-                        enabled = !avatar.isUnlocked && progress.points >= avatar.cost,
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .then(
+                                if (isSelected) {
+                                    Modifier.border(
+                                        3.dp,
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.shapes.medium
+                                    )
+                                } else {
+                                    Modifier
+                                }
+                            ),
+                        enabled = avatar.isUnlocked || progress.points >= avatar.cost,
                         onClick = {
-                            if (!avatar.isUnlocked) {
+                            if (!avatar.isUnlocked && progress.points >= avatar.cost) {
                                 viewModel.onUnlockAvatar(avatar.id)
+                            } else if (avatar.isUnlocked) {
+                                viewModel.onSelectAvatar(avatar.id)
                             }
                         }
                     ) {
@@ -61,12 +79,26 @@ fun RewardsScreen(viewModel: RewardsViewModel = viewModel()) {
                         ) {
                             Text(avatar.icon, style = MaterialTheme.typography.displayMedium)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(avatar.name, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+                            Text(avatar.name, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
                             Spacer(modifier = Modifier.height(8.dp))
                             if (avatar.isUnlocked) {
-                                Text("¡Desbloqueado!", color = MaterialTheme.colorScheme.primary)
+                                if (isSelected) {
+                                    Text("¡Seleccionado!",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        style = MaterialTheme.typography.labelMedium)
+                                } else {
+                                    Text("Toca para seleccionar",
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
                             } else {
-                                Text("${avatar.cost} Puntos", style = MaterialTheme.typography.labelMedium)
+                                Text("${avatar.cost} Puntos",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (progress.points >= avatar.cost) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    })
                             }
                         }
                     }

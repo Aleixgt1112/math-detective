@@ -5,5 +5,5 @@ data class Avatar(
     val name: String,
     val icon: String,
     val cost: Int,
-    val isUnlocked: Boolean = false
+    val isUnlocked: Boolean
 )
